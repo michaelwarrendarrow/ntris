@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Advanced Tetris HTML Game</title>
+  <meta charset="UTF-8">
+  <style>
+  html, body {
+    height: 100%;
+    margin: 0;
+  }
+
+  body {
+    background: black;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+
+
+  /*canvas {
+    border: 1px solid white;
+  }*/
+
+  .settingsbutton {
+    margin: 20px;
+  }
+
+  #settingsDialog {
+    color: gray;
+    background: black;
+    border: 2px solid gray;
+  }
+  #settingsDialog div {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  #settingsDialog td {
+    padding: 3px;
+  }
+  #helpDialog {
+    color: white;
+    background: black;
+    border: 2px solid gray;
+  }
+  #helpDialog div {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  </style>
+</head>
+<body>
+  <dialog id="settingsDialog">
+    <div>
+    <h2>Settings</h2>
+    <table><tr><td>Garbage Rows</td><td><input id="settingGR" size="3"></td></tr>
+      <tr><td>Board Width</td><td><input id="settingBoardWidth" size="2"></td></tr>
+      <tr><td>Board Height</td><td><input id="settingBoardHeight" size="2"></td></tr>
+      <tr><td>Mystery</td><td><input id="settingMystery" size="3"></td></tr>
+      <tr><td>Falling Delay</td><td><input id="settingFallingSpeed" size="2"></td></tr>
+      <tr><td>Falling Acceleration</td><td><input id="settingFA" size="3"></td></tr>
+      <tr><td>Next Pieces</td><td><input id="settingNextPieces" size="1"></td></tr>
+      <tr><td>Allowed Holes</td><td><input id="settingCloseEnough" size="1"></td></tr>
+      <tr><td>Held Pieces</td><td><input id="settingHeldPieces" size="1"></td></tr>      
+      <tr><td>Wrap Around</td><td><input type="checkbox" id="settingWrapAround"></td></tr>
+      <tr><td>Replenishing Garbage</td><td><input type="checkbox" id="settingRGR"></td></tr>
+      <tr><td>Social Distancing</td><td><input type="checkbox" id="settingSD"></td></tr>
+      <tr><td>Dual Mode</td><td><input type="checkbox" id="settingDual"></td></tr>
+      <tr><td>Flipping</td><td><input type="checkbox" id="settingFlipping"></td></tr>
+    </table>
+    <button onclick="randomizeSettings();">Shuffle</button>
+    <button onclick="resetSettings();showSettings();">Reset</button>
+    <button onclick="hideSettings();">Close</button>
+    <button onclick="saveSettings();">Save</button>
+    </div>
+  </dialog>
+  <dialog id="helpDialog">
+    <div>
+      <table>
+        <tr><td>A / Left Arrow:</td><td>Move Left</td></tr>
+        <tr><td>D / Right Arrow:</td><td>Move Right</td></tr>
+        <tr><td>W / Up Arrow:</td><td>Rotate</td></tr>
+        <tr><td>S / Down Arrow:</td><td>Descend</td></tr>
+        <tr><td>Q / Space:</td><td>Hold</td></tr>
+        <tr><td>E:</td><td>Flip</td></tr>
+      </table>
+      <button onclick="hideControls();">Close</button>
+    </div>
+  </dialog>
+<canvas width="540" height="640" id="game"></canvas>
+ <button class="settingsbutton" id="helpButton" onclick="showControls();">Controls</button>
+ <button class="settingsbutton" id="settingsButton" onclick="showSettings();this.blur();">Settings</button>
+<script>
+// https://tetris.fandom.com/wiki/Tetris_Guideline
+
+// get a random integer between the range of [min,max]
+// @see https://stackoverflow.com/a/1527820/2124254
+function getRandomInt(min, max) {
+  min = Math.ceil(min);
+  max = Math.floor(max);
+
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function modulo(a, b) {
+  return ((a % b) + b) % b;
+}
+
+function showControls() {
+  pause = true;
+  document.getElementById("helpDialog").showModal();
+}
+
+function hideControls() {
+  document.getElementById("helpDialog").close();
+  pause = false;
+}
+
+var settings;
+
+function resetSettings() { 
+  settings = {gr: 0, boardWidth: 10, boardHeight: 20, mystery: 2032, fallingSpeed: 35, fa: 1.01, nextPieces: 1, closeEnough: 0, heldPieces: 0, wrapAround: false, rgr: false, sd: false, dual: false, flipping: false};
+}
+
+resetSettings();
+
+function showSettings() {
+  pause = true; 
+  document.getElementById("settingGR").value = settings["gr"];
+  document.getElementById("settingBoardWidth").value = settings["boardWidth"];
+  document.getElementById("settingBoardHeight").value = settings["boardHeight"];
+  document.getElementById("settingMystery").value = settings["mystery"];
+  document.getElementById("settingFallingSpeed").value = settings["fallingSpeed"];
+  document.getElementById("settingFA").value = settings["fa"];
+  document.getElementById("settingNextPieces").value = settings["nextPieces"];
+  document.getElementById("settingCloseEnough").value = settings["closeEnough"];
+  document.getElementById("settingHeldPieces").value = settings["heldPieces"];
+  document.getElementById("settingWrapAround").checked = settings["wrapAround"];
+  document.getElementById("settingRGR").checked = settings["rgr"];
+  document.getElementById("settingSD").checked = settings["sd"];
+  document.getElementById("settingDual").checked = settings["dual"];
+  document.getElementById("settingFlipping").checked = settings["flipping"];
+  document.getElementById("settingsDialog").showModal();
+  document.getElementById("settingsButton").blur();
+}
+
+function hideSettings() {
+  document.getElementById("settingsDialog").close();
+  pause = false;
+}
+
+function saveSettings() {
+  settings["gr"] = document.getElementById("settingGR").value * 1;
+  settings["boardWidth"] = document.getElementById("settingBoardWidth").value * 1;
+  settings["boardHeight"] = document.getElementById("settingBoardHeight").value * 1;
+  settings["mystery"] = document.getElementById("settingMystery").value * 1;
+  settings["fallingSpeed"] = document.getElementById("settingFallingSpeed").value * 1;
+  settings["fa"] = document.getElementById("settingFA").value * 1;
+  settings["nextPieces"] = document.getElementById("settingNextPieces").value * 1;
+  settings["closeEnough"] = document.getElementById("settingCloseEnough").value * 1;
+  settings["heldPieces"] = document.getElementById("settingHeldPieces").value * 1;
+  settings["wrapAround"] = document.getElementById("settingWrapAround").checked;
+  settings["rgr"] = document.getElementById("settingRGR").checked;
+  settings["sd"] = document.getElementById("settingSD").checked;
+  settings["dual"] = document.getElementById("settingDual").checked;
+  settings["flipping"] = document.getElementById("settingFlipping").checked;
+  restartGame();
+  document.getElementById("settingsDialog").close();
+}
+
+var allpieces = ['.', 'i', 'l', '|', 'I', 'T', 'O', 'L', 'J', 'S', 'Z', 'V', 'F', 'R', 'II', 'X', 'random', 'madnor', 'FY', 'theBrick', 'brick2', 'D', 'X2', 'FYold', 'W'];
+
+var chiralPairs = {
+  'I': 'I',
+  'J': 'L',
+  'L': 'J',
+  'O': 'O',
+  'S': 'Z',
+  'Z': 'S',
+  'T': 'T',
+  'i': 'i',
+  'l': 'l',
+  '|': '|',
+  'F': 'R',
+  'R': 'F',
+  'II': 'II',
+  '.': '.',
+  'X': 'X',
+  'FY': 'FY',
+  'FYold': 'FYold',
+  'theBrick': 'theBrick',
+  'brick2': 'brick2',
+  'X2': 'X2',
+  'W': 'W',
+  'V': 'V',
+  'D': 'D',
+  'random': 'madnor',
+  'madnor': 'random'
+}
+
+function randomizeSettings() {
+  settings["boardHeight"] = getRandomInt(10,30);
+  settings["boardWidth"] = getRandomInt(Math.round(settings["boardHeight"]/3), Math.round(settings["boardHeight"]*2/3));
+  settings["gr"] = Math.min(getRandomInt(0,settings["boardHeight"]),getRandomInt(0,settings["boardHeight"]));
+  settings["fallingSpeed"] = getRandomInt(20, 50);
+  settings["fa"] = 1 + 0.02 * Math.random();
+  settings["mystery"] = 0;
+  let j = getRandomInt(1,allpieces.length);
+  for (let i = 1 + Math.floor(-6*Math.log(Math.random()));i>0;i--) {
+    settings["mystery"] += 2**getRandomInt(1,j);
+  }
+  settings["nextPieces"] = Math.floor(-2*Math.log(Math.random()));
+  settings["closeEnough"] = Math.floor(-Math.log(Math.random()));
+  settings["heldPieces"] = Math.floor(-2*Math.log(Math.random()));
+  settings["wrapAround"] = (Math.random() > 0.8);
+  settings["rgr"] = (Math.random() > 0.8);
+  settings["sd"] = (Math.random() > 0.8);
+  settings["dual"] = (Math.random() > 0.8);
+  settings["flipping"] = (Math.random() > 0.8);
+  showSettings();
+}
+
+var pause = false; 
+var canvas = document.getElementById('game');
+var context = canvas.getContext('2d');
+var grid = 32;
+var gridsmall = 20;
+var tetrominoSequence = [];
+var held = [];
+
+// how to draw each tetromino
+// @see https://tetris.fandom.com/wiki/SRS
+const tetrominos = {
+  'I': [
+    [0,0,0,0],
+    [1,1,1,1],
+    [0,0,0,0],
+    [0,0,0,0]
+  ],
+  'J': [
+    [1,0,0],
+    [1,1,1],
+    [0,0,0],
+  ],
+  'L': [
+    [0,0,1],
+    [1,1,1],
+    [0,0,0],
+  ],
+  'O': [
+    [1,1],
+    [1,1],
+  ],
+  'S': [
+    [0,1,1],
+    [1,1,0],
+    [0,0,0],
+  ],
+  'Z': [
+    [1,1,0],
+    [0,1,1],
+    [0,0,0],
+  ],
+  'T': [
+    [0,1,0],
+    [1,1,1],
+    [0,0,0],
+  ],
+  'FY': [
+    [1,1,1],
+    [1,0,1],
+    [1,1,0]
+  ],
+  '|': [
+    [0,0,0],
+    [1,1,1],
+    [0,0,0]
+  ],
+  'II': [
+    [0,0,0,0,0],
+    [0,0,0,0,0],
+    [1,1,1,1,1],
+    [0,0,0,0,0],
+    [0,0,0,0,0]
+  ],
+  'F': [
+    [1,1,0],
+    [0,1,1],
+    [0,1,0]
+  ],
+  'D': [
+    [0,0,1],
+    [0,1,0],
+    [1,0,0]
+  ],
+  'W': [
+    [0,0,1,1],
+    [0,1,1,0],
+    [1,1,0,0],
+    [1,0,0,0]
+  ],
+  'l': [
+    [1,1],
+    [1,0]
+  ],
+  'X': [
+    [0,0,0,0,0],
+    [0,0,1,0,0],
+    [0,1,1,1,1],
+    [0,0,1,0,0],
+    [0,0,0,0,0]
+  ],
+  'R': [
+    [0,1,1],
+    [1,1,0],
+    [0,1,0]
+  ],
+  'theBrick': [
+    [1,1,1],
+    [1,1,1],
+    [0,0,0]
+  ],
+  '.': [
+    [1]
+  ],
+  "i": [
+    [1,1],
+    [0,0]
+  ],
+  'X2': [
+    [0,1,0,0],
+    [1,1,1,1],
+    [0,1,0,0],
+    [0,1,0,0]
+  ],
+  'brick2': [
+    [1,1,1],
+    [1,1,1],
+    [1,1,1]
+  ],
+  'FYold': [
+    [1,1,1],
+    [1,0,1],
+    [1,1,1]
+  ],
+  'V': [
+    [0,0,1],
+    [0,0,1],
+    [1,1,0]
+  ],
+  'random': [
+    [getRandomInt(0,1),getRandomInt(0,1),getRandomInt(0,1)],
+    [getRandomInt(0,1),getRandomInt(0,1),getRandomInt(0,1)],
+    [getRandomInt(0,1),getRandomInt(0,1),getRandomInt(0,1)]
+  ]
+};
+tetrominos['madnor'] = tetrominos['random'].map(cell => cell.reverse()); // there's like no way this works first try
+
+// color of each tetromino
+const colors = {
+  'I': 'cyan',
+  'O': 'yellow',
+  'T': 'purple',
+  'S': 'green',
+  'Z': 'red',
+  'J': 'blue',
+  'L': 'orange',
+  'FY': 'white',
+  '|': 'cyan',
+  'II': 'cyan',
+  'F': 'brown',
+  'D': 'gray',
+  'W': 'silver',
+  'l': 'pink',
+  'garbage': 'gainsboro',
+  'X': 'saddlebrown',
+  'nonsolid': 'darkslategrey',
+  'R': 'darkgreen',
+  'theBrick': 'brown',
+  '.': 'rebeccapurple',
+  'i': 'royalblue',
+  'X2': 'firebrick',
+  'brick2': 'firebrick',
+  'FYold': 'white',
+  'V': 'skyblue',
+  'random': '#' + getRandomInt(100000,999999),
+  'madnor': '#' + getRandomInt(100000,999999)
+};
+
+
+// keep track of what is in every cell of the game using a 2d array
+// tetris playfield is 10x20, with a few rows offscreen
+var playfield = [];
+
+let count = 0;
+var tetromino;
+let rAF = null;  // keep track of the animation frame so we can cancel it
+let gameOver = false;
+let score = 0;
+var holdcycleattempts = 0;
+var piececount = 0;
+
+var box = [];
+var nextpieces = [];
+
+function restartGame() {
+  box = [];
+  for(let i = 0; i < allpieces.length; i++) {
+    if (!(settings.mystery % 2**(i + 1) < 2**i)) {
+      box.push(allpieces[i]);
+    }
+  }
+  grid = Math.round(Math.sqrt(204800 / (settings.boardWidth * settings.boardHeight)));
+  gridsmall = Math.round(grid * 0.625);
+
+  canvas.width = settings["boardWidth"]*grid + gridsmall * 11;
+  canvas.height = settings["boardHeight"]*grid;
+  canvas = document.getElementById('game');
+  context = canvas.getContext('2d');
+  
+  holdcycleattempts = 0;
+  tetrominoSequence = [];
+
+  playfield = [];
+  // populate the empty state
+  for (let row = -2; row < settings.boardHeight + 2; row++) {
+    playfield[row] = [];
+    if (row >= 0 && row < settings.boardHeight) {
+      for (let col = 0; col < settings.boardWidth; col++) {
+        if (settings.dual) {
+          if (Math.abs(settings.boardHeight - row * 2 - 1/2) > settings["gr"]) {
+            playfield[row][col] = (row > settings.boardHeight / 2) ? 'garbage' : 0; 
+          } else {
+            playfield[row][col] = [0, 'garbage'][getRandomInt(0,1)];
+          }
+
+        } else {
+          if (settings.boardHeight - row > settings["gr"]) {
+            playfield[row][col] = 0;
+          } else {
+            playfield[row][col] = [0, 'garbage'][getRandomInt(0,1)];
+          }
+        }
+      }
+    } else {
+      for (let col = 0; col < settings.boardWidth; col++) {
+        playfield[row][col] = (row > settings.boardHeight / 2) ? 'garbage' : 0; 
+      }
+    }
+  }
+
+  count = 0;
+  tetromino = name2tetromino(getNextTetromino());
+  nextpieces = [];
+  held = [];
+  for(i=0;i<settings.nextPieces;i++) {
+    nextpieces.push(getNextTetromino());
+  }
+  rAF = null;  // keep track of the animation frame so we can cancel it
+  if (gameOver = true) {
+    rAF = requestAnimationFrame(loop);
+  }
+  gameOver = false;
+  score = 0;
+
+  pause = false;
+}
+
+function noTouchy() {
+  for (let row = -2; row < settings.boardHeight; row++) {
+    for (let col = 0; col < settings.boardWidth; col++) {
+      if (!isSocialDistancer(row,col)) {
+        if ((isSocialDistancer(row,col+1) || isSocialDistancer(row,col-1) || isSocialDistancer(row+1,col) || isSocialDistancer(row-1,col))) {
+          playfield[row][col] = 'nonsolid';
+        } else {playfield[row][col] = FlipIfDual(false) ? 'garbage' : 0;}
+      }
+    }
+  }
+}
+
+function isSocialDistancer(row,col) {
+  if (-2 <= row && row < settings.boardHeight) {
+    if (0 <= col && col < settings.boardWidth) {
+      return FlipIfDual(!!playfield[row][col]) && (playfield[row][col] != 'nonsolid')
+    } else {
+      if (settings.wrapAround) {return isSocialDistancer(row, modulo(col,settings.boardWidth));}
+    }
+  } else {return false;}
+  
+}
+
+function spawningCol(piece) {
+  // I and O start centered, all others start in left-middle
+  return Math.floor((settings.boardWidth - tetrominos[piece][0].length) / 2);
+}
+function spawningRow(piece) {
+  // I starts on row 21 (-1), all others start on row 22 (-2)
+  return Math.floor(tetrominos[piece][0].length / 2) - 3;
+}
+
+// generate a new tetromino sequence
+// @see https://tetris.fandom.com/wiki/Random_Generator
+function generateSequence() {
+  let sequence = box.slice();
+
+  while (sequence.length) {
+    const rand = getRandomInt(0, sequence.length - 1);
+    const name = sequence.splice(rand, 1)[0];
+    tetrominoSequence.push(name);
+  }
+}
+
+// get the next tetromino in the sequence
+function getNextTetromino() {
+  if (tetrominoSequence.length === 0) {
+    generateSequence();
+  }
+
+  const name = tetrominoSequence.pop();
+  return name;
+}
+
+function name2tetromino(s) {
+  let matrix = tetrominos[s];
+
+  let col = spawningCol(s);
+  if (settings.wrapAround) {col = col + tetromino.col - spawningCol(tetromino.name);}
+  
+  let row = spawningRow(s);
+
+  return {
+    name: s,      // name of the piece (L, O, etc.)
+    matrix: matrix,  // the piece shape, rotated
+    row: row,        // row (starts offscreen)
+    col: col         // column
+  };
+}
+
+// rotate an NxN matrix 90deg
+// @see https://codereview.stackexchange.com/a/186834
+function rotate(matrix) {
+  const N = matrix.length - 1;
+  const result = matrix.map((row, i) =>
+    row.map((val, j) => matrix[N - j][i])
+  );
+
+  return result;
+}
+
+// check to see if the new matrix/row/col is valid
+function isValidMove(matrix, cellRow, cellCol) {
+  for (let row = 0; row < matrix.length; row++) {
+    for (let col = 0; col < matrix[row].length; col++) {
+      if (matrix[row][col] && (
+          // outside the game bounds
+          ((cellCol + col < 0 ||
+          cellCol + col >= settings.boardWidth) && !settings.wrapAround) ||
+          (cellRow + row) >= settings.boardHeight ||
+          // collides with another piece
+          isCollidable(playfield[FlipIfDual(cellRow + row)][modulo(cellCol + col, settings.boardWidth)]))
+        ) {
+        return false;
+      }
+    }
+  }
+
+  return true;
+}
+
+function isCollidable(cell) {
+  if (FlipIfDual(false)) {
+    return cell == 'nonsolid' || !cell; 
+  } else {
+    return !!cell
+  }
+}
+
+function nexttetromino() {
+  holdcycleattempts = 0;
+  piececount += 1;
+  nextpieces.push(getNextTetromino());
+  tetromino = name2tetromino(nextpieces[0]);
+  nextpieces.splice(0, 1);
+}
+
+function droprowsaboverow(row) {
+  for (let r = row; r >= 0; r--) {
+    for (let c = 0; c < playfield[r].length; c++) {
+      playfield[r][c] = playfield[r-1][c];
+    }
+  }
+  increasescore();
+}
+
+function raiserowsbelowrow(row) {
+  for (let r = row; r < settings.boardHeight - 1; r++) {
+    for (let c = 0; c < playfield[r].length; c++) {
+      playfield[r][c] = playfield[r+1][c];
+    }
+  }
+  increasescore();
+}
+
+let scoreincrease = 0;
+function increasescore() {
+  scoreincrease = scoreincrease + 1;
+  score += scoreincrease;
+}
+
+// place the tetromino on the playfield
+function placeTetromino() {
+  for (let row = 0; row < tetromino.matrix.length; row++) {
+    for (let col = 0; col < tetromino.matrix[row].length; col++) {
+      if (tetromino.matrix[row][col]) {
+
+        // game over if piece has any part offscreen
+        if (tetromino.row + row < 0) {
+          return showGameOver();
+        }
+
+        playfield[FlipIfDual(tetromino.row + row)][modulo((tetromino.col + col),settings.boardWidth)] = FlipIfDual(false) ? 0 : tetromino.name;
+      }
+    }
+  }
+  if (settings.sd) {noTouchy();}
+  scoreincrease = 0;
+  // check for line clears starting from the bottom and working our way up
+  if (!settings.dual) {
+    for (let row = settings.boardHeight - 1; row >= 0; ) {
+      if (playfield[row].filter(cell => !cell).length <= settings.closeEnough) {
+        if (settings.rgr && playfield[row].filter(cell => cell == 'garbage').length > 0) {
+          // raise every row below this one
+          raiserowsbelowrow(row);
+          playfield[settings.boardHeight - 1] = playfield[settings.boardHeight - 1].map(cell => [0, 'garbage'][getRandomInt(0,1)]);
+        } else {
+          // drop every row above this one
+          droprowsaboverow(row);
+
+        }
+      }
+      else {
+        row--;
+      }
+    }
+  } else {
+    let thebool = false;
+    for (let row = settings.boardHeight - 1; row >= 0; row--) {
+      if (playfield[FlipIfDual(row)].filter(cell => !isCollidable(cell)).length <= settings.closeEnough) {
+        if (thebool) {
+        // drop every row above this one
+          FlipIfDual(false) ? droprowsaboverow(settings.boardHeight - 1 - row) : raiserowsbelowrow(row);
+        }  
+      } else {thebool = true;}
+    }
+  }
+  if (settings.sd) {noTouchy();}
+  nexttetromino();
+}
+
+function FlipIfDual(k) {
+  if (typeof k == "number") {
+    return ((piececount % 2 == 1) && settings.dual) ? (settings.boardHeight - 1 - k) : k
+  } else {
+    return ((piececount % 2 == 1) && settings.dual) ^ k
+  }
+}
+// show the game over screen
+function showGameOver() {
+  cancelAnimationFrame(rAF);
+  gameOver = true;
+
+  context.fillStyle = 'black';
+  context.globalAlpha = 0.75;
+  context.fillRect(0, canvas.height / 2 - 30, canvas.width, 60);
+
+  context.globalAlpha = 1;
+  context.fillStyle = 'white';
+  context.font = '36px monospace';
+  context.textAlign = 'center';
+  context.textBaseline = 'middle';
+  context.fillText('GAME OVER!', canvas.width / 2, canvas.height / 2);
+}
+
+// game loop
+function loop() {
+  rAF = requestAnimationFrame(loop);
+  if(pause) { return; }
+
+  context.clearRect(0,0,canvas.width,canvas.height);
+
+  context.strokeStyle = "white";
+  context.strokeWidth = 2;
+  context.strokeRect(gridsmall * 5.5,0,settings.boardWidth*grid,settings.boardHeight*grid);
+
+  // draw the playfield
+  for (let row = 0; row < settings.boardHeight; row++) {
+    for (let col = 0; col < settings.boardWidth; col++) {
+      if (playfield[row][col]) {
+        const name = playfield[row][col];
+        context.fillStyle = colors[name];
+        // drawing 1 px smaller than the grid creates a grid effect
+        if (settings.wrapAround) {
+          context.fillRect(modulo(col - tetromino.col + spawningCol(tetromino.name),settings.boardWidth) * grid + gridsmall * 5.5, row * grid, grid-1, grid-1);
+        } else {
+          context.fillRect(col * grid + gridsmall * 5.5, row * grid, grid-1, grid-1);
+        }
+      }
+    }
+  }
+
+  // draw the active tetromino
+  if (tetromino) {
+
+    // tetromino falls every 35 frames, but they get faster as you score
+    if (++count > (settings.fallingSpeed / (settings.fa ** score))) {
+      tetromino.row++;
+      count = 0;
+
+      // place piece if it runs into anything
+      if (!isValidMove(tetromino.matrix, tetromino.row, tetromino.col)) {
+        tetromino.row--;
+        placeTetromino();
+      }
+    }
+
+    context.fillStyle = FlipIfDual(false) ? 'black' : colors[tetromino.name];
+
+    for (let row = 0; row < tetromino.matrix.length; row++) {
+      for (let col = 0; col < tetromino.matrix[row].length; col++) {
+        if (tetromino.matrix[row][col]) {
+
+          // drawing 1 px smaller than the grid creates a grid effect
+          if (settings.wrapAround) {
+          // I am aware that if the tetromino is wider than the grid, it renders out of bounds. I don't care
+            context.fillRect((col + spawningCol(tetromino.name)) * grid + gridsmall*5.5, FlipIfDual(tetromino.row + row) * grid, grid-1, grid-1);
+          } else {
+            context.fillRect((col + tetromino.col) * grid + gridsmall*5.5, FlipIfDual(tetromino.row + row) * grid, grid-1, grid-1);
+          }
+        }
+      }
+    }
+  }
+  // draw the next tetrominoes
+  for (i=0;i<settings.nextPieces;i++) {
+
+    context.fillStyle = colors[nextpieces[i]];
+
+    for (let row = 0; row < tetrominos[nextpieces[i]].length; row++) {
+      for (let col = 0; col < tetrominos[nextpieces[i]][row].length; col++) {
+        if (tetrominos[nextpieces[i]][row][col]) {
+
+          // drawing it smaller to indicate that it isn't right now
+          context.fillRect((spawningCol(nextpieces[i]) + col + 8.5 - settings.boardWidth / 2) * gridsmall + settings.boardWidth * grid, (spawningRow(nextpieces[i]) + row + 8.5 + i*4 - tetrominos[nextpieces[i]].length / 2) * gridsmall, gridsmall-1, gridsmall-1);
+        }
+      }
+    }
+  }
+
+  context.fillStyle = 'darkslategray';
+  context.fillRect(0, 4.5 * gridsmall, 5.5 * gridsmall, settings.heldPieces * 4 * gridsmall);
+
+  // draw the held tetrominoes
+  for (i=0;i<settings.heldPieces;i++) {
+    if (held[i]) {
+      context.fillStyle = colors[held[i]];
+
+      for (let row = 0; row < tetrominos[held[i]].length; row++) {
+        for (let col = 0; col < tetrominos[held[i]][row].length; col++) {
+          if (tetrominos[held[i]][row][col]) {
+
+          // drawing it smaller to indicate that it isn't right now
+            context.fillRect((spawningCol(held[i]) + col + 3 - settings.boardWidth / 2) * gridsmall, (spawningRow(held[i]) + row + 8.5 + (settings.heldPieces-1-i)*4 - tetrominos[held[i]].length / 2) * gridsmall, gridsmall-1, gridsmall-1);
+          }
+        }
+      }
+    }
+  }
+  // draw the score
+  context.fillStyle = 'white';
+  context.font = '36px monospace';
+  context.textAlign = 'center';
+  context.textBaseline = 'middle';
+  context.fillText(score, 50 + settings.boardWidth * grid + gridsmall * 5.5, 20);
+}
+
+// listen to keyboard events to move the active tetromino
+document.addEventListener('keydown', function(e) {
+  if (gameOver) return;
+
+  // left and right arrow keys (move)
+  if (e.which === 37 || e.which === 39 || e.which === 65 || e.which === 68 || e.which === 97 || e.which === 100) {
+    const col = (e.which === 37 || e.which === 65 || e.which === 97)
+      ? tetromino.col - 1
+      : tetromino.col + 1;
+
+    if (isValidMove(tetromino.matrix, tetromino.row, col)) {
+      tetromino.col = col;
+    }
+  }
+
+  // up arrow key (rotate)
+  if (e.which === 38 || e.which === 87 || e.which === 119) {
+    const matrix = FlipIfDual(false) ? rotate(rotate(rotate(tetromino.matrix))) : rotate(tetromino.matrix);
+    if (isValidMove(matrix, tetromino.row, tetromino.col)) {
+      tetromino.matrix = matrix;
+    }
+  }
+
+  // down arrow key (drop)
+  if(e.which === 40 || e.which === 83 || e.which === 115) {
+    const row = tetromino.row + 1;
+
+    if (!isValidMove(tetromino.matrix, row, tetromino.col)) {
+      tetromino.row = row - 1;
+
+      placeTetromino();
+      return;
+    }
+
+    tetromino.row = row;
+  }
+
+  if (e.which === 32 || e.which === 81 || e.which === 113) {
+    document.getElementById("settingsButton").blur(); // this one is necessary
+    if (settings.heldPieces > 0 && holdcycleattempts < settings.heldPieces) {
+      held.splice(0, 0, tetromino.name);
+      holdcycleattempts++;
+      if (held.length > settings.heldPieces) {
+        tetromino = name2tetromino(held.pop());
+      } else {
+        nexttetromino();
+      }
+    }
+  }
+
+  if (e.which === 69 || e.which === 101) {
+    if (settings.flipping) {
+      const matrix = tetromino.matrix.map(sdrvg => sdrvg.toReversed());
+      if(isValidMove(matrix,tetromino.row,tetromino.col)) {
+        tetromino.name = chiralPairs[tetromino.name];
+        tetromino.matrix = matrix;
+      }
+    }
+  }
+
+});
+
+// start the game
+rAF = requestAnimationFrame(loop);
+
+restartGame();
+</script>
+</body>
+</html>
