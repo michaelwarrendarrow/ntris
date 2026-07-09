@@ -66,6 +66,7 @@
       <tr><td>Next Pieces</td><td><input id="settingNextPieces" size="1"></td></tr>
       <tr><td>Allowed Holes</td><td><input id="settingCloseEnough" size="1"></td></tr>
       <tr><td>Held Pieces</td><td><input id="settingHeldPieces" size="1"></td></tr>      
+      <tr><td>Garbage Percentage</td><td><input id="settingGarbagePercentage" size="1"></td></tr>
       <tr><td>Wrap Around</td><td><input type="checkbox" id="settingWrapAround"></td></tr>
       <tr><td>Replenishing Garbage</td><td><input type="checkbox" id="settingRGR"></td></tr>
       <tr><td>Social Distancing</td><td><input type="checkbox" id="settingSD"></td></tr>
@@ -129,7 +130,7 @@ var settings;
 var settingsb;
 
 function resetSettings() { 
-  settings = {gr: 0, boardWidth: 10, boardHeight: 20, mystery: 4064, fallingSpeed: 35, fa: 1.01, nextPieces: 1, closeEnough: 0, heldPieces: 0, wrapAround: false, rgr: false, sd: false, dual: false, flipping: false};
+  settings = {gr: 0, boardWidth: 10, boardHeight: 20, mystery: 4064, fallingSpeed: 35, fa: 1.01, nextPieces: 1, closeEnough: 0, heldPieces: 0, garbagePercentage: 50, wrapAround: false, rgr: false, sd: false, dual: false, flipping: false};
 }
 
 settingsb = {udDual: false, lrDual: false, rotateDual: false, wadc: false};
@@ -147,6 +148,7 @@ function showSettings() {
   document.getElementById("settingNextPieces").value = settings["nextPieces"];
   document.getElementById("settingCloseEnough").value = settings["closeEnough"];
   document.getElementById("settingHeldPieces").value = settings["heldPieces"];
+  document.getElementById("settingGarbagePercentage").value = settings["garbagePercentage"]
   document.getElementById("settingWrapAround").checked = settings["wrapAround"];
   document.getElementById("settingRGR").checked = settings["rgr"];
   document.getElementById("settingSD").checked = settings["sd"];
@@ -175,6 +177,7 @@ function saveSettings() {
   settings["nextPieces"] = document.getElementById("settingNextPieces").value * 1;
   settings["closeEnough"] = document.getElementById("settingCloseEnough").value * 1;
   settings["heldPieces"] = document.getElementById("settingHeldPieces").value * 1;
+  settings["garbagePercentage"] = document.getElementById("settingGarbagePercentage").value * 1;
   settings["wrapAround"] = document.getElementById("settingWrapAround").checked;
   settings["rgr"] = document.getElementById("settingRGR").checked;
   settings["sd"] = document.getElementById("settingSD").checked;
@@ -235,6 +238,7 @@ function randomizeSettings() {
   settings["nextPieces"] = Math.floor(-2*Math.log(Math.random()));
   settings["closeEnough"] = Math.floor(-Math.log(Math.random()));
   settings["heldPieces"] = Math.floor(-2*Math.log(Math.random()));
+  settings["garbagePercentage"] = getRandomInt(1, 99);
   settings["wrapAround"] = (Math.random() > 0.8);
   settings["rgr"] = (Math.random() > 0.8);
   settings["sd"] = (Math.random() > 0.8);
@@ -470,14 +474,14 @@ function restartGame() {
           if (Math.abs(settings.boardHeight - row * 2 - 1/2) > settings["gr"]) {
             playfield[row][col] = (row > settings.boardHeight / 2) ? 'garbage' : 0; 
           } else {
-            playfield[row][col] = [0, 'garbage'][getRandomInt(0,1)];
+            playfield[row][col] = [0, 'garbage'][(Math.random() < settings.garbagePercentage / 100) * 1];
           }
 
         } else {
           if (settings.boardHeight - row > settings["gr"]) {
             playfield[row][col] = 0;
           } else {
-            playfield[row][col] = [0, 'garbage'][getRandomInt(0,1)];
+            playfield[row][col] = [0, 'garbage'][(Math.random() < settings.garbagePercentage / 100) * 1];
           }
         }
       }
