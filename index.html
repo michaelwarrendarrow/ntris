@@ -60,7 +60,7 @@
     <table><tr><td>Garbage Rows</td><td><input id="settingGR" size="3"></td></tr>
       <tr><td>Board Width</td><td><input id="settingBoardWidth" size="2"></td></tr>
       <tr><td>Board Height</td><td><input id="settingBoardHeight" size="2"></td></tr>
-      <tr><td>Mystery</td><td><input id="settingMystery" size="3"></td></tr>
+      <tr><td>Mystery</td><td><input id="settingMystery" size="6"></td></tr>
       <tr><td>Falling Delay</td><td><input id="settingFallingSpeed" size="2"></td></tr>
       <tr><td>Falling Acceleration</td><td><input id="settingFA" size="3"></td></tr>
       <tr><td>Next Pieces</td><td><input id="settingNextPieces" size="1"></td></tr>
@@ -131,7 +131,7 @@ var settings;
 var settingsb;
 
 function resetSettings() { 
-  settings = {gr: 0, boardWidth: 10, boardHeight: 20, mystery: 4064, fallingSpeed: 35, fa: 1.01, nextPieces: 1, closeEnough: 0, heldPieces: 0, garbagePercentage: 50, scoreAcceleration: 1, wrapAround: false, rgr: false, sd: false, dual: false, flipping: false};
+  settings = {gr: 0, boardWidth: 10, boardHeight: 20, mystery: 15584, fallingSpeed: 35, fa: 1.01, nextPieces: 1, closeEnough: 0, heldPieces: 0, garbagePercentage: 50, scoreAcceleration: 1, wrapAround: false, rgr: false, sd: false, dual: false, flipping: false};
 }
 
 settingsb = {udDual: false, lrDual: false, rotateDual: false, wadc: false};
@@ -194,7 +194,7 @@ function saveSettings() {
   document.getElementById("settingsDialog").close();
 }
 
-var allpieces = ['.', 'i', 'l', 'd', '|', 'I', 'T', 'O', 'L', 'J', 'S', 'Z', 'V', 'F', 'R', 'II', 'X', 'random', 'madnor', 'FY', 'theBrick', 'brick2', 'random2', 'madnor2', 'D', 'X2', 'FYold', 'W'];
+var allpieces = ['.', 'i', 'l', 'd', '|', 'I', 'T', 'O', 'banana', 'unbanana', 'L', 'J', 'S', 'Z', 'V', 'F', 'R', 'II', 'X', 'random', 'madnor', 'FY', 'theBrick', 'brick2', 'random2', 'madnor2', 'D', 'X2', 'FYold', 'W'];
 
 var chiralPairs = {
   'I': 'I',
@@ -224,7 +224,9 @@ var chiralPairs = {
   'madnor': 'random',
   'random2': 'madnor2',
   'madnor2': 'random2',
-  'd': 'd'
+  'd': 'd',
+  'banana': 'unbanana',
+  'unbanana': 'banana'
 }
 
 function randomizeSettings() {
@@ -393,6 +395,16 @@ const tetrominos = {
   'd': [
     [0,1],
     [1,0]
+  ],
+  'banana': [
+    [0,0,1],
+    [1,1,0],
+    [0,0,0]
+  ],
+  'unbanana': [
+    [1,0,0],
+    [0,1,1],
+    [0,0,0]
   ]
 };
 tetrominos['madnor'] = tetrominos['random'].map(cell => cell.toReversed()); // there's like no way this worked first try
@@ -429,7 +441,9 @@ const colors = {
   'madnor': '#' + getRandomInt(100000,999999),
   'random2': '#' + getRandomInt(100000,999999),
   'madnor2': '#' + getRandomInt(100000,999999),
-  'd': 'deeppink'
+  'd': 'deeppink',
+  'banana': 'beige',
+  'unbanana': 'lightyellow'
 };
 
 
