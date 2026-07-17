@@ -771,7 +771,7 @@ function placeTetromino() {
         if (settings.rgr && playfield[row].filter(cell => cell == 'garbage').length > 0) {
           // raise every row below this one
           raiserowsbelowrow(row);
-          playfield[settings.boardHeight - 1] = playfield[settings.boardHeight - 1].map(cell => [0, 'garbage'][getRandomInt(0,1)]);
+          playfield[settings.boardHeight - 1] = playfield[settings.boardHeight - 1].map(cell => (Math.random() * 100 > settings.garbagePercentage ? 0 : 'garbage'));
         } else {
           // drop every row above this one
           droprowsaboverow(row);
