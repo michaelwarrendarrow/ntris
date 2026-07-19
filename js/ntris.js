@@ -133,7 +133,7 @@ function restartGame() {
   gridsmall = Math.round(grid * 0.625);
 
   canvas.width = settings.game.boardWidth*grid*wadcmult + gridsmall * 11;
-  canvas.height = (settings.game.boardHeight + (settings.stairs ? settings.game.boardWidth*wadcmult : 0))*grid;
+  canvas.height = (settings.game.boardHeight + (settings.game.stairs ? settings.game.boardWidth*wadcmult : 0))*grid;
   canvas = document.getElementById('game');
   context = canvas.getContext('2d');
   
@@ -175,7 +175,7 @@ function restartGame() {
   for(let i=0;i<settings.game.nextPieces;i++) {
     nextpieces.push(getNextTetromino());
   }
-  
+
   rAF = null;  // keep track of the animation frame so we can cancel it
   if (gameOver = true) {
     rAF = requestAnimationFrame(loop);
