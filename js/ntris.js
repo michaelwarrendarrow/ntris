@@ -1,150 +1,3 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Michael's NTRIS</title>
-  <meta charset="UTF-8">
-  <style>
-  html, body {
-    height: 100%;
-    margin: 0;
-  }
-
-  body {
-    background: black;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-
-
-
-  /*canvas {
-    border: 1px solid white;
-  }*/
-
-  .settingsbutton {
-    margin: 20px;
-  }
-
-  #settingsDialog {
-    color: gray;
-    background: black;
-    border: 2px solid gray;
-  }
-
-  #settingsDialog td {
-    padding: 3px;
-  }
-  #helpDialog {
-    color: white;
-    background: black;
-    border: 2px solid gray;
-  }
-  .settingsColumn {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;x
-    padding: 20px;
-    margin: 10px;
-  }
-
-  .settingsColumns {
-    display: flex;
-    flex-direction: row;
-    align-items: flex-start;
-  }
-
-  .settingsRows {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .buttonRow {
-    display: block;
-  }
-
-  </style>
-</head>
-<body>
-  <dialog id="settingsDialog">
-      <div class="settingsRows">
-
-        <h2>Settings</h2>
-
-        <div class="settingsColumns">
-          <div class="settingsColumn">
-          <table><tr><td>Garbage Rows</td><td><input id="settingGR" size="3"></td></tr>
-            <tr><td>Board Width</td><td><input id="settingBoardWidth" size="2"></td></tr>
-            <tr><td>Board Height</td><td><input id="settingBoardHeight" size="2"></td></tr>
-            <tr><td>Mystery</td><td><input id="settingMystery" size="6"></td></tr>
-            <tr><td>Falling Delay</td><td><input id="settingFallingSpeed" size="2"></td></tr>
-            <tr><td>Falling Acceleration</td><td><input id="settingFA" size="3"></td></tr>
-            <tr><td>Next Pieces</td><td><input id="settingNextPieces" size="1"></td></tr>
-            <tr><td>Allowed Holes</td><td><input id="settingCloseEnough" size="1"></td></tr>
-            <tr><td>Held Pieces</td><td><input id="settingHeldPieces" size="1"></td></tr>      
-            <tr><td>Garbage Percentage</td><td><input id="settingGarbagePercentage" size="1"></td></tr>
-            <tr><td>Score Acceleration</td><td><input id="settingScoreAcceleration" size="1"></td></tr>
-            <tr><td>Wrap Around</td><td><input type="checkbox" id="settingWrapAround"></td></tr>
-            <tr><td>Replenishing Garbage</td><td><input type="checkbox" id="settingRGR"></td></tr>
-            <tr><td>Social Distancing</td><td><input type="checkbox" id="settingSD"></td></tr>
-            <tr><td>Dual Mode</td><td><input type="checkbox" id="settingDual"></td></tr>
-            <tr><td>Flipping</td><td><input type="checkbox" id="settingFlipping"></td></tr>
-            <tr><td>Stairs Mode</td><td><input type="checkbox" id="settingStairs"></td></tr>
-          </table>
-
-          </div>
-
-          <div class="settingsColumn">
-            <table>
-              <tr><td>Dual Inverts Left/Right</td><td><input type="checkbox" id="settingbLRDual"></td></tr>
-              <tr><td>Dual Inverts Up/Down</td><td><input type="checkbox" id="settingbUDDual"></td></tr>
-              <tr><td>Dual Inverts Rotation</td><td><input type="checkbox" id="settingbRotateDual"></td></tr>
-              <tr><td>Wrap Around Display Change</td><td><input type="checkbox" id="settingbWADC"></td></tr>
-              <tr><td>Piece Randomization Difficulty Bias</td><td><input id="settingbPRDB" size="3"></td></tr>
-              <tr><td>Piece Randomization Same Color Bias</td><td><input id="settingbPRSCB" size="3"></td></tr>
-              <tr><td>Piece Randomization Symmetry Bias</td><td><input id="settingbPRSB" size="3"></td></tr>
-              <tr><td>Piece Color Red Channel Mode</td><td><input id="settingbRedColor" size="1"></td></tr>
-              <tr><td>Piece Color Green Channel Mode</td><td><input id="settingbGreenColor" size="1"></td></tr>
-              <tr><td>Piece Color Blue Channel Mode</td><td><input id="settingbBlueColor" size="1"></td></tr>
-            </table>
-          </div>
-        </div>
-
-        <div style="display: block; margin-top: 20px;">
-          <button onclick="randomizeSettings();">Shuffle</button>
-          <button onclick="resetSettings();showSettings();">Reset</button>
-          <button onclick="resetSettings();resetSettingsB();showSettings();">Reset All</button>
-          <button onclick="hideSettings();">Close</button>
-          <button onclick="saveSettings();">Save</button>
-        </div>
-      </div>
-  </dialog>
-  <dialog id="helpDialog">
-    <div>
-      <table>
-        <tr><td>A / Left Arrow:</td><td>Move Left</td></tr>
-        <tr><td>D / Right Arrow:</td><td>Move Right</td></tr>
-        <tr><td>W / Up Arrow:</td><td>Rotate</td></tr>
-        <tr><td>S / Down Arrow:</td><td>Descend</td></tr>
-        <tr><td>Q / Space:</td><td>Hold</td></tr>
-        <tr><td>E:</td><td>Flip</td></tr>
-      </table>
-      <button onclick="hideControls();">Close</button>
-    </div>
-  </dialog>
-<canvas width="540" height="640" id="game"></canvas>
- <div class="buttonRow">
-   <button class="settingsbutton" id="helpButton" onclick="showControls();">Controls</button>
-   <button class="settingsbutton" id="settingsButton" onclick="showSettings();this.blur();">Settings</button>
-  </div>
-<script>
-// https://tetris.fandom.com/wiki/Tetris_Guideline
-
-// get a random integer between the range of [min,max]
-// @see https://stackoverflow.com/a/1527820/2124254
 function getRandomInt(min, max) {
   min = Math.ceil(min);
   max = Math.floor(max);
@@ -174,12 +27,9 @@ function resetSettings() {
   settings = {gr: 0, boardWidth: 10, boardHeight: 20, mystery: 15584, fallingSpeed: 35, fa: 1.01, nextPieces: 1, closeEnough: 0, heldPieces: 0, garbagePercentage: 50, scoreAcceleration: 1, wrapAround: false, rgr: false, sd: false, dual: false, flipping: false, stairs: false};
 }
 
-function resetSettingsB() {
-  settingsb = {udDual: false, lrDual: false, rotateDual: false, wadc: false, prdb: 0, prscb: 0, prsb: 0, redColor: 0, greenColor: 1, blueColor: 2};
-}
+settingsb = {udDual: false, lrDual: false, rotateDual: false, wadc: false, prdb: 0, prscb: 0, prsb: 0};
 
 resetSettings();
-resetSettingsB();
 
 function showSettings() {
   pause = true; 
@@ -207,9 +57,6 @@ function showSettings() {
   document.getElementById("settingbPRDB").value = settingsb["prdb"];
   document.getElementById("settingbPRSB").value = settingsb["prsb"];
   document.getElementById("settingbPRSCB").value = settingsb["prscb"];
-  document.getElementById("settingbRedColor").value = settingsb["redColor"];
-  document.getElementById("settingbGreenColor").value = settingsb["greenColor"];
-  document.getElementById("settingbBlueColor").value = settingsb["blueColor"];
   document.getElementById("settingsDialog").showModal();
   document.getElementById("settingsButton").blur();
 }
@@ -244,9 +91,6 @@ function saveSettings() {
   settingsb["prdb"] = document.getElementById("settingbPRDB").value * 1;
   settingsb["prscb"] = document.getElementById("settingbPRSCB").value * 1;
   settingsb["prsb"] = document.getElementById("settingbPRSB").value * 1;
-  settingsb["redColor"] = document.getElementById("settingbRedColor").value * 1;
-  settingsb["greenColor"] = document.getElementById("settingbGreenColor").value * 1;
-  settingsb["blueColor"] = document.getElementById("settingbBlueColor").value * 1;
   restartGame();
   document.getElementById("settingsDialog").close();
 }
@@ -577,21 +421,6 @@ function bottom2numberC(bottom) {
   return (0.5 ** toret) * 255;
 }
 
-function bottom2numberD(bottom) {
-  let X = 0;
-  let toret = 0;
-  for (let i=0; i<bottom.length-1; i++) {
-    if (bottom[i] == bottom[i+1]) {
-      X += 1;
-    } else {
-      toret += (1 - 0.5 ** X) * 255;
-      X = 0;
-    }
-  }
-  toret += (1 - 0.5 ** X) * 255;
-  return toret * 4 / bottom.length;
-}
-
 function zeroifnan(number) {
   if (number > 0 || number < 0 || number == 0) {
     return number;
@@ -606,12 +435,7 @@ function matrix2color(matrix) {
   let A = extremifiedaverage(bottoms.map(bottom => zeroifnan(bottom2numberA(bottom))));
   let B = extremifiedaverage(bottoms.map(bottom => zeroifnan(bottom2numberB(bottom))));
   let C = extremifiedaverage(bottoms.map(bottom => zeroifnan(bottom2numberC(bottom))));
-  let D = extremifiedaverage(bottoms.map(bottom => zeroifnan(bottom2numberD(bottom))));
-  let channels = [A, B, C, D];
-  return '#' + padwithzeros((
-    Math.round(channels[modulo(Math.round(settingsb.redColor),4)]) * 65536 + 
-    Math.round(channels[modulo(Math.round(settingsb.greenColor),4)]) * 256 + 
-    Math.round(channels[modulo(Math.round(settingsb.blueColor),4)])).toString(16));
+  return '#' + padwithzeros((Math.round(A) * 65536 + Math.round(B) * 256 + Math.round(C)).toString(16));
 }
 
 
@@ -1103,10 +927,9 @@ document.addEventListener('keydown', function(e) {
 
 });
 
-// start the game
-rAF = requestAnimationFrame(loop);
+function beginGame() {
+  // start the game
+  rAF = requestAnimationFrame(loop);
 
-restartGame();
-</script>
-</body>
-</html>
+  restartGame();
+}
