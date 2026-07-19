@@ -538,9 +538,14 @@ function loop() {
 
 }
 
+function controlsOff() {
+  if (gameOver) return true;
+  if (pause)    return true;
+  return false; 
+}
+
 export function pieceLeft() {
-  if (gameOver) return;
-  if (pause) return;
+  if (controlsOff()) return;
 
   if (isValidMove(tetromino.matrix, tetromino.row, tetromino.col + 1)) {
     tetromino.col++;
@@ -548,8 +553,7 @@ export function pieceLeft() {
 }
 
 export function pieceRight() {
-  if (gameOver) return;
-  if (pause) return;
+  if (controlsOff()) return;
 
   if (isValidMove(tetromino.matrix, tetromino.row, tetromino.col - 1)) {
     tetromino.col--;
@@ -557,6 +561,8 @@ export function pieceRight() {
 }
 
 export function pieceRotate() {
+  if (controlsOff()) return;
+
   const matrix = (FlipIfDual(false) && !settings.user.roateDual) ? rotate(rotate(rotate(tetromino.matrix))) : rotate(tetromino.matrix);
   if (isValidMove(matrix, tetromino.row, tetromino.col)) {
     tetromino.matrix = matrix;
@@ -564,6 +570,8 @@ export function pieceRotate() {
 }
 
 export function pieceDown() {
+  if (controlsOff()) return;
+
   const row = tetromino.row + 1;
   if (!isValidMove(tetromino.matrix, row, tetromino.col)) {
     tetromino.row = row - 1;
@@ -575,6 +583,8 @@ export function pieceDown() {
 }
 
 export function pieceFlip() {
+  if (controlsOff()) return;
+
   if (settings.game.flipping) {
     const matrix = tetromino.matrix.map(sdrvg => sdrvg.toReversed());
     if(isValidMove(matrix,tetromino.row,tetromino.col)) {
