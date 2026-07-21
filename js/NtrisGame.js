@@ -30,6 +30,7 @@ export default class NtrisGame {
 		this.lookAhead = null;
 		this.held      = null; 
 		this.tetrominoFactory = null; 
+		this.movingDown = false; // I didn't want to have this as a parameter in the tryValidMove function
 
 		// Game modes
 		this.gamePaused = true;
@@ -112,20 +113,34 @@ export default class NtrisGame {
 	  let drawnWidth = settings.game.boardWidth*this.wadcmult;
 	  if (settings.game.stairs) {
 	    context.beginPath();
-	    context.moveTo(gridsmall * 5.5, 0);
+	    context.moveTo(gridsmall * 5.5, grid * settings.game.boardHeight);
+	    context.lineTo(gridsmall * 5.5, 0);
 	    for (let i = 0; i < drawnWidth; i++) {
 	      context.lineTo(gridsmall * 5.5 + grid * (i+1), grid * i);
 	      context.lineTo(gridsmall * 5.5 + grid * (i+1), grid * (i + 1));
 	    }
 	    context.lineTo(gridsmall * 5.5 + grid * drawnWidth, grid * (drawnWidth + settings.game.boardHeight - 1));
+	    context.stroke();
+	    if (settings.game.floorIsLava) {context.strokeStyle = "red";}
+	    context.beginPath();
+	    context.moveTo(gridsmall * 5.5 + grid * drawnWidth, grid * (drawnWidth + settings.game.boardHeight - 1));
 	    for (let i = 0; i < drawnWidth; i++) {
 	      context.lineTo(gridsmall * 5.5 + grid * (drawnWidth - (i+1)), grid * (drawnWidth + settings.game.boardHeight - (i+1)));
 	      context.lineTo(gridsmall * 5.5 + grid * (drawnWidth - (i+1)), grid * (drawnWidth + settings.game.boardHeight - (i+2)));
 	    }
-	    context.closePath();
 	    context.stroke();
 	  } else {
-	    context.strokeRect(gridsmall * 5.5,0,drawnWidth*grid,settings.game.boardHeight*grid);
+	  	context.beginPath();
+	  	context.moveTo(gridsmall * 5.5, grid * settings.game.boardHeight);
+	  	context.lineTo(gridsmall * 5.5, 0);
+	  	context.lineTo(gridsmall * 5.5 + grid * drawnWidth, 0);
+	  	context.lineTo(gridsmall * 5.5 + grid * drawnWidth, grid * settings.game.boardHeight);
+	  	context.stroke();
+	  	if (settings.game.floorIsLava) {context.strokeStyle = "red";}
+	  	context.beginPath();
+	  	context.moveTo(gridsmall * 5.5, grid * settings.game.boardHeight);
+	  	context.lineTo(gridsmall * 5.5 + grid * drawnWidth, grid * settings.game.boardHeight);
+	    context.stroke();
 	  }
 	}
 
@@ -410,8 +425,8 @@ export default class NtrisGame {
 	  return -1-piece.matrix.map(row => row.reduce((a, b) => 1 - (1-a) * (1-b))).lastIndexOf(1) + (settings.game.stairs ? (this.FlipIfDual(false) ? -this.spawningCol(piece) : this.spawningCol(piece)) : 0);
 	}
 
-	// check to see if the new matrix/row/col is valid
-	isValidMove(matrix, cellRow, cellCol) {
+	// it is not a query function!
+	tryValidMove(matrix, cellRow, cellCol) {
 	  if(cellRow - matrix.length - (settings.game.stairs ? (cellCol) : 0) >= settings.game.boardHeight) {
 	  	return false; // Make empty matrices crash eventually
 	  }
@@ -422,21 +437,23 @@ export default class NtrisGame {
 	      	  let gridRow = row + cellRow; 
 	      	  let gridCol = col + cellCol; 
 
-	      	  if(gridCol < 0  && ! settings.game.wrapAround) { return false; }
-	      	  if(gridCol >= settings.game.boardWidth && ! settings.game.wrapAround) { return false; }
-	      	  if(gridRow - (settings.game.stairs ? (gridCol) : 0) >= settings.game.boardHeight) { return false; }
+	      	  if(gridCol < 0  && ! settings.game.wrapAround) { if(this.tetromino.sticky) {this.placeTetromino();} return; }
+	      	  if(gridCol >= settings.game.boardWidth && ! settings.game.wrapAround) { if(this.tetromino.sticky) {this.placeTetromino();} return; }
+	      	  if(gridRow - (settings.game.stairs ? (gridCol) : 0) >= settings.game.boardHeight) { if(settings.game.floorIsLava) {this.showGameOver(); return;} else {this.placeTetromino(); return;} }
 	      	  if(this.isCollidable(
 	          	   this.playfield[
 	          		 this.FlipIfDual(gridRow) - (settings.game.stairs ? (gridCol) : 0)]
 	          		   [mu.modulo(cellCol + col, settings.game.boardWidth)])) {     
-	          	return false;
+	          	if(this.tetromino.sticky || this.movingDown) {this.placeTetromino(); return;}
 	      	  }
 	        
 	      }
 	    }
 	  }
 
-	  return true;
+	  this.tetromino.matrix = matrix;
+	  this.tetromino.row = cellRow;
+	  this.tetromino.col = cellCol;
 	}
 
 	// game
@@ -594,13 +611,9 @@ export default class NtrisGame {
 	    // tetromino falls every 35 frames, but they get faster as you score
 	    if (this.framesUntilMove++ > (settings.game.fallingSpeed / (settings.game.fa ** this.score))) {
 	      this.framesUntilMove = 0;
-
-	      // Did we land? 
-		  if (!this.isValidMove(this.tetromino.matrix, this.tetromino.row + 1, this.tetromino.col)) {		  	
-	        this.placeTetromino();
-	      } else {
-			this.tetromino.row++;
-		  }
+	      this.movingDown = true;
+		  this.tryValidMove(this.tetromino.matrix, this.tetromino.row + 1, this.tetromino.col);		  	
+		  this.movingDown = false;
 	    }	
 	  }	
 	}
@@ -613,58 +626,37 @@ export default class NtrisGame {
 	}
 
 	pieceLeft() {
-	  if (this.controlsOff()) return;
-	  if (this.isValidMove(this.tetromino.matrix, this.tetromino.row, this.tetromino.col + 1)) {
-	    this.tetromino.col++;
-	  } else {if (this.tetromino.sticky) {this.placeTetromino();}}
+	  this.tryValidMove(this.tetromino.matrix, this.tetromino.row, this.tetromino.col + 1);
 	}
-
 	pieceRight() {
-	  if (this.controlsOff()) return;
 
-	  if (this.isValidMove(this.tetromino.matrix, this.tetromino.row, this.tetromino.col - 1)) {
-	    this.tetromino.col--;
-	  } else {if (this.tetromino.sticky) {this.placeTetromino();}}
+	  this.tryValidMove(this.tetromino.matrix, this.tetromino.row, this.tetromino.col - 1);
 	}
 
 	pieceRotate() {
-	  if (this.controlsOff()) return;
 
 	  const matrix = (this.FlipIfDual(false) && !settings.user.roateDual) ? mu.rotate(mu.rotate(mu.rotate(this.tetromino.matrix))) : mu.rotate(this.tetromino.matrix);
-	  if (this.isValidMove(matrix, this.tetromino.row, this.tetromino.col)) {
-	   this.tetromino.matrix = matrix.map(r => r.slice());
-	  } else {if (this.tetromino.sticky) {this.placeTetromino();}}
+	  this.tryValidMove(matrix, this.tetromino.row, this.tetromino.col)
 	}
 
 	pieceDown() {
-	  if (this.controlsOff()) return;
-	  
+	  this.movingDown = true;
 	  const row = this.tetromino.row + 1;
-	  if (!this.isValidMove(this.tetromino.matrix, row, this.tetromino.col)) {
-	    this.tetromino.row = row - 1;
-
-	    this.placeTetromino();
-	    return;
-	  }
-	  this.tetromino.row = row;
-	  
+	  this.tryValidMove(this.tetromino.matrix, row, this.tetromino.col)
+	  this.movingDown = false;
 	}
 
 	pieceFlip() {
-	  if (this.controlsOff()) return;
 
 	  
 	  if (settings.game.flipping) {
 	    const matrix = this.tetromino.matrix.map(sdrvg => sdrvg.toReversed());
-	    if(this.isValidMove(matrix,this.tetromino.row,this.tetromino.col)) {
-	      this.tetromino.matrix = matrix.map(r => r.slice());
-	    } else {if (this.tetromino.sticky) {this.placeTetromino();}}
+	    this.tryValidMove(matrix,this.tetromino.row,this.tetromino.col);
 	  }
 	  
 	}
 
 	pieceHold() {
-	  if (this.controlsOff()) return;
 	  
 	  document.getElementById("settingsButton").blur(); // this one is necessary
 	  if (settings.game.heldPieces > 0 && this.holdcycleattempts < settings.game.heldPieces) {
