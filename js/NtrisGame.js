@@ -56,13 +56,35 @@ export default class NtrisGame {
 		cancelAnimationFrame(this.rAF);
 	}
 
+	calculateCanvasSize() {
+		let width = settings.game.boardWidth*this.grid*this.wadcmult + this.gridsmall * 11;
+		let height = (settings.game.boardHeight + (settings.game.stairs ? settings.game.boardWidth*this.wadcmult : 0))*this.grid;
+
+		return([width, height]); 
+	}
+
 	resizeCanvas() {
 	  if (settings.user.wadc && settings.game.wrapAround) {this.wadcmult = 2} else {this.wadcmult = 1}
+
 	  this.grid = Math.round(Math.sqrt(204800 / (settings.game.boardWidth * settings.game.boardHeight * this.wadcmult)));
+
+	  let windowHeight = document.documentElement.clientHeight*0.9; // 0.9 to leave some margin
+	  let windowWidth  = document.documentElement.clientWidth*0.9;
+	  let canvasWidth, canvasHeight;
+	  [canvasWidth, canvasHeight] = this.calculateCanvasSize(); 
+
+	  let fixWidth = 1, fixHeight = 1; 
+	  if(canvasWidth  > windowWidth  && canvasWidth  != 0) { fixWidth = windowWidth / canvasWidth; }
+	  if(canvasHeight > windowHeight && canvasHeight != 0) { fixHeight = windowHeight / canvasHeight; }
+
+	  let fixGrid = Math.min(fixWidth, fixHeight);
+	  if(fixGrid < 1) { this.grid *= fixGrid; }
 	  this.gridsmall = Math.round(this.grid * 0.625);
 
-	  this.canvas.width = settings.game.boardWidth*this.grid*this.wadcmult + this.gridsmall * 11;
-	  this.canvas.height = (settings.game.boardHeight + (settings.game.stairs ? settings.game.boardWidth*this.wadcmult : 0))*this.grid;
+	  [canvasWidth, canvasHeight] = this.calculateCanvasSize(); 
+
+	  this.canvas.width = canvasWidth;
+	  this.canvas.height = canvasHeight;
 	  this.canvas = document.getElementById('game');
 	  this.context = this.canvas.getContext('2d');
 	}
