@@ -299,28 +299,29 @@ export default class NtrisGame {
 
 	// show the game over screen
 	showGameOver() {
-	    this.pause(); 
-	    if (settings.user.lossBehavior == 'nothing') {
-		  this.gameOver = true;
-
-		  let context = this.context; 
-		  let canvas = this.canvas; 
-		  context.fillStyle = 'black';
-		  context.globalAlpha = 0.75;
-		  context.fillRect(0, canvas.height / 2 - 30, canvas.width, 60);
-
-		  context.globalAlpha = 1;
-		  context.fillStyle = 'white';
-		  context.font = '36px monospace';
-		  context.textAlign = 'center';
-		  context.textBaseline = 'middle';
-		  context.fillText('GAME OVER!', canvas.width / 2, canvas.height / 2);
+	    if (settings.user.lossBehavior == 'shuffle') {
+			settings.randomizeSettings();
+			this.restartGame();
 		} else {
 			if (settings.user.lossBehavior == 'restart') {
 				this.restartGame();
 			} else {
-				settings.randomizeSettings();
-				this.restartGame();
+				
+				this.gameOver = true;
+
+				let context = this.context; 
+				let canvas = this.canvas; 
+				context.fillStyle = 'black';
+				context.globalAlpha = 0.75;
+				context.fillRect(0, canvas.height / 2 - 30, canvas.width, 60);
+
+				context.globalAlpha = 1;
+				context.fillStyle = 'white';
+				context.font = '36px monospace';
+				context.textAlign = 'center';
+				context.textBaseline = 'middle';
+		 		context.fillText('GAME OVER!', canvas.width / 2, canvas.height / 2);
+				this.pause();
 			}
 		}
 	}
@@ -523,6 +524,7 @@ export default class NtrisGame {
 	        if (thebool) {
 	        // drop every row above this one
 	          this.FlipIfDual(false) ? this.droprowsaboverow(settings.game.boardHeight - 1 - row) : this.raiserowsbelowrow(row);
+	          this.increaseScore();
 	        }  
 	      } else {thebool = true;}
 	    }

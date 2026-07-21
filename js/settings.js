@@ -122,7 +122,7 @@ export function saveSettings() {
   user["greenColor"] = document.getElementById("settingbGreenColor").value * 1;
   user["blueColor"]  = document.getElementById("settingbBlueColor").value * 1;
   user["useStaticColor"] = document.getElementById("settingbStaticColor").checked;
-  user["settingbLoss"] = document.getElementById("settingbLoss").value;
+  user["lossBehavior"] = document.getElementById("settingbLoss").value;
 
 
   if(game["morph"] || game["drunkAnt"]) {
