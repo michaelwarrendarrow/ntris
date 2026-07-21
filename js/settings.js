@@ -38,7 +38,8 @@ export let user = {
   redColor: 0,
   greenColor: 1,
   blueColor: 2,
-  useStaticColor: 0 // Yes UI -- just to demonstrate power of new interfaces
+  useStaticColor: 0, // Yes UI -- just to demonstrate power of new interfaces
+  lossBehaivor: 'nothing'
 };
 
 export function resetSettings() { 
@@ -78,6 +79,7 @@ export function showSettings() {
   document.getElementById("settingbGreenColor").value   = user["greenColor"];
   document.getElementById("settingbBlueColor").value    = user["blueColor"];
   document.getElementById("settingbStaticColor").checked= user["useStaticColor"];
+  document.getElementById("settingbLoss").value         = user["lossBehavior"];
 
   document.getElementById("settingsDialog").showModal();
   document.getElementById("settingsButton").blur();
@@ -120,6 +122,7 @@ export function saveSettings() {
   user["greenColor"] = document.getElementById("settingbGreenColor").value * 1;
   user["blueColor"]  = document.getElementById("settingbBlueColor").value * 1;
   user["useStaticColor"] = document.getElementById("settingbStaticColor").checked;
+  user["settingbLoss"] = document.getElementById("settingbLoss").value;
 
 
   if(game["morph"] || game["drunkAnt"]) {

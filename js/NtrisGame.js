@@ -299,21 +299,30 @@ export default class NtrisGame {
 
 	// show the game over screen
 	showGameOver() {
-	  this.pause(); 
-	  this.gameOver = true;
+	    this.pause(); 
+	    if (settings.user.lossBehavior == 'nothing') {
+		  this.gameOver = true;
 
-	  let context = this.context; 
-	  let canvas = this.canvas; 
-	  context.fillStyle = 'black';
-	  context.globalAlpha = 0.75;
-	  context.fillRect(0, canvas.height / 2 - 30, canvas.width, 60);
+		  let context = this.context; 
+		  let canvas = this.canvas; 
+		  context.fillStyle = 'black';
+		  context.globalAlpha = 0.75;
+		  context.fillRect(0, canvas.height / 2 - 30, canvas.width, 60);
 
-	  context.globalAlpha = 1;
-	  context.fillStyle = 'white';
-	  context.font = '36px monospace';
-	  context.textAlign = 'center';
-	  context.textBaseline = 'middle';
-	  context.fillText('GAME OVER!', canvas.width / 2, canvas.height / 2);
+		  context.globalAlpha = 1;
+		  context.fillStyle = 'white';
+		  context.font = '36px monospace';
+		  context.textAlign = 'center';
+		  context.textBaseline = 'middle';
+		  context.fillText('GAME OVER!', canvas.width / 2, canvas.height / 2);
+		} else {
+			if (settings.user.lossBehavior == 'restart') {
+				this.restartGame();
+			} else {
+				settings.randomizeSettings();
+				this.restartGame();
+			}
+		}
 	}
 
 	// Game logic
