@@ -426,25 +426,47 @@ export default class NtrisGame {
 	}
 
 	// it is not a query function!
-	tryValidMove(matrix, cellRow, cellCol) {
+	tryValidMove(matrix, cellRow, cellCol, move='') {
 	  if(cellRow - matrix.length - (settings.game.stairs ? (cellCol) : 0) >= settings.game.boardHeight) {
 	  	return false; // Make empty matrices crash eventually
 	  }
+
+	  // Copy grid in case ghosty needs it
+	  let gridCells = matrix.map(row => row.slice()); 
+	  for (let row = 0; row < matrix.length; row++) {
+	    for (let col = 0; col < matrix[row].length; col++) {
+	      	let gridRow = row + cellRow; 
+	      	let gridCol = col + cellCol; 
+
+	      	gridCells[row][col] = this.playfield[
+	            this.FlipIfDual(gridRow) - (settings.game.stairs ? (gridCol) : 0)]
+	            [mu.modulo(cellCol + col, settings.game.boardWidth)];
+	    }
+	  }
+
 	  for (let row = 0; row < matrix.length; row++) {
 	    for (let col = 0; col < matrix[row].length; col++) {
 	      if (matrix[row][col]) {
-
 	      	  let gridRow = row + cellRow; 
 	      	  let gridCol = col + cellCol; 
+	      	  let hitFloor = gridRow - (settings.game.stairs ? (gridCol) : 0) >= settings.game.boardHeight;
+	      	  let hitWallLeft = gridCol < 0  && ! settings.game.wrapAround;
+	      	  let hitWallRight = gridCol >= settings.game.boardWidth && ! settings.game.wrapAround; 
 
-	      	  if(gridCol < 0  && ! settings.game.wrapAround) { if(this.tetromino.sticky) {this.placeTetromino();} return; }
-	      	  if(gridCol >= settings.game.boardWidth && ! settings.game.wrapAround) { if(this.tetromino.sticky) {this.placeTetromino();} return; }
-	      	  if(gridRow - (settings.game.stairs ? (gridCol) : 0) >= settings.game.boardHeight) { if(settings.game.floorIsLava) {this.showGameOver(); return;} else {this.placeTetromino(); return;} }
-	      	  if(this.isCollidable(
-	          	   this.playfield[
-	          		 this.FlipIfDual(gridRow) - (settings.game.stairs ? (gridCol) : 0)]
-	          		   [mu.modulo(cellCol + col, settings.game.boardWidth)])) {     
-	          	if(this.tetromino.sticky || this.movingDown) {this.placeTetromino();} return;
+	      	  // Only solid ghosty pieces actually collide
+	      	  
+	      	  if(this.tetromino.ghosty) {	      	  	
+	      	  	if(! (this.tetromino.ghostymatrix[row][col] == 'solid')) { 
+		      	  	if(! (hitFloor || hitWallLeft || hitWallRight) ) {
+		      	  		continue; 
+		      	  	}
+		      	 }
+	      	  }
+
+	      	  if(hitWallLeft || hitWallRight) { if(this.tetromino.sticky) {this.placeTetromino();} return false; }
+	      	  if(hitFloor) { if(settings.game.floorIsLava) {this.showGameOver(); return false;} else {this.placeTetromino(); return false;} }
+	      	  if(this.isCollidable(gridCells[row][col])) {     
+	          	if(this.tetromino.sticky || this.movingDown) {this.placeTetromino();} return true;
 	      	  }
 	        
 	      }
@@ -454,6 +476,20 @@ export default class NtrisGame {
 	  this.tetromino.matrix = matrix;
 	  this.tetromino.row = cellRow;
 	  this.tetromino.col = cellCol;
+
+	  if(this.tetromino.ghosty) {
+		  if(move == 'rotate') {
+		  	this.tetromino.ghostyRotate();
+		  } 
+		  if(move == 'flip') {
+		  	this.tetromino.ghostyFlip();
+		  }
+
+
+	  	this.tetromino.ghostyUpdate(gridCells); 
+	   }
+
+	  return true; 
 	}
 
 	// game
@@ -506,7 +542,10 @@ export default class NtrisGame {
 	        }
 
 	        let cell = new gc.GridCell();
-	        if(! this.FlipIfDual(false)) { cell.makePlacedPiece(tetromino.matrix, tetromino.name, tetromino.color); } 
+	        if(tetromino.ghosty) { cell = tetromino.placeGhostyCell(row, col, cell); }
+	        else {
+	        	if(! this.FlipIfDual(false)) { cell.makePlacedPiece(tetromino.matrix, tetromino.name, tetromino.color); } 
+	        }
 	        playfield[playrow][mu.modulo((tetromino.col + col),settings.game.boardWidth)] = cell;
 	      }
 	    }
@@ -636,7 +675,7 @@ export default class NtrisGame {
 	pieceRotate() {
 
 	  const matrix = (this.FlipIfDual(false) && !settings.user.roateDual) ? mu.rotate(mu.rotate(mu.rotate(this.tetromino.matrix))) : mu.rotate(this.tetromino.matrix);
-	  this.tryValidMove(matrix, this.tetromino.row, this.tetromino.col)
+	  this.tryValidMove(matrix, this.tetromino.row, this.tetromino.col, 'rotate')
 	}
 
 	pieceDown() {
@@ -651,7 +690,7 @@ export default class NtrisGame {
 	  
 	  if (settings.game.flipping) {
 	    const matrix = this.tetromino.matrix.map(sdrvg => sdrvg.toReversed());
-	    this.tryValidMove(matrix,this.tetromino.row,this.tetromino.col);
+	    this.tryValidMove(matrix,this.tetromino.row,this.tetromino.col, 'flip');
 	  }
 	  
 	}

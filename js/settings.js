@@ -24,7 +24,8 @@ let gameDefault = {
   drunkAnt: false,
   stickyChance: 0,
   floorIsLava: false,
-  polyominoes: false
+  polyominoes: false,
+  ghostyChance: 0
 };
 
 export let game = {...gameDefault};
@@ -69,6 +70,7 @@ export function showSettings() {
   document.getElementById("settingMorph").checked = game["morph"];
   document.getElementById("settingDrunkAnt").checked = game["drunkAnt"];
   document.getElementById("settingStickyChance").value = game["stickyChance"];
+  document.getElementById("settingGhostyChance").value = game["ghostyChance"];
   document.getElementById("settingFloorIsLava").checked = game["floorIsLava"];
   document.getElementById("settingPolyominoes").checked = game["polyominoes"];
 
@@ -106,6 +108,7 @@ export function saveSettings() {
   game["garbagePercentage"] = document.getElementById("settingGarbagePercentage").value * 1;
   game["scoreAcceleration"] = document.getElementById("settingScoreAcceleration").value * 1;
   game["stickyChance"] = document.getElementById("settingStickyChance").value * 1;
+  game["ghostyChance"] = document.getElementById("settingGhostyChance").value * 1;
   game["floorIsLava"]  = document.getElementById("settingFloorIsLava").checked;
   game["wrapAround"]   = document.getElementById("settingWrapAround").checked;
   game["rgr"]          = document.getElementById("settingRGR").checked;
@@ -139,6 +142,8 @@ export function saveSettings() {
     }
   }  
   document.getElementById("settingsDialog").close();
+
+  if(game.dual) { game.ghostyChance = 0; }
 }
 
 export function randomizeSettings() {
@@ -197,6 +202,7 @@ export function randomizeSettings() {
   game["garbagePercentage"] = mu.getRandomInt(1, 99);
   game["scoreAcceleration"] = mu.getRandomInt(0, 2);
   game["stickyChance"] = mu.getRandomInt(0, 1) * mu.getRandomInt(0, 1) * mu.getRandomInt(1, 99);
+  game["ghostyChance"] = mu.getRandomInt(0,5) < 1 ? Math.floor(Math.random()*Math.random()*100) : 0;
   game["wrapAround"] = (Math.random() > 5/6);
   game["rgr"] = (Math.random() > 5/6);
   game["sd"] = (Math.random() > 5/6);
@@ -214,5 +220,7 @@ export function randomizeSettings() {
   if(game["morph"] || game["drunkAnt"]) {
     game["mystery"] = 2; // These settings override piece selection
   }
+
+  if(game.dual) { game.ghostyChance = 0; }
 
 }
