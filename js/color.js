@@ -102,7 +102,12 @@ function bottom2numberD(bottom) {
 export function matrix2color(matrix) {
   let matrices = [matrix, mu.rotate(matrix), mu.rotate(mu.rotate(matrix)), mu.rotate(mu.rotate(mu.rotate(matrix)))];
   let bottoms = matrices.map(matrice => removeEdgeInf(matrice.map(row => mu.minusonetoinf(row.indexOf(1)))));
-  bottoms = bottoms.map(bottom => bottom.map(x => x - Math.min(array)));
+  for (let i = 0; i < 4; i++) {
+    let Q = Math.min(...bottoms[i])
+    for (let j = 0; j < bottoms[i].length; j++) {
+      bottoms[i][j] = bottoms[i][j]-Q;
+    }
+  }
   let A = mu.extremifiedaverage(bottoms.map(bottom => mu.zeroifnan(bottom2numberA(bottom))));
   let B = mu.extremifiedaverage(bottoms.map(bottom => mu.zeroifnan(bottom2numberB(bottom))));
   let C = mu.extremifiedaverage(bottoms.map(bottom => mu.zeroifnan(bottom2numberC(bottom))));
