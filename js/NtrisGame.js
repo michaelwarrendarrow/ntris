@@ -560,7 +560,7 @@ export default class NtrisGame {
 	          // raise every row below this one
 	          this.raiserowsbelowrow(row);
 	          for (let i = 0; i < playfield[settings.game.boardHeight-1].length; i++) {
-	          	playfield[settings.game.boardHeight-1][i] = new gc.GridCell([gc.EMPTY, gc.GARBAGE][(Math.random() < sg.garbagePercentage / 100) * 1]);
+	          	playfield[settings.game.boardHeight-1][i] = new gc.GridCell([gc.EMPTY, gc.GARBAGE][(Math.random() < settings.game.garbagePercentage / 100) * 1]);
 	          }
 	          this.increaseScore();
 
