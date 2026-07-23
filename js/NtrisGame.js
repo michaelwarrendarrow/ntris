@@ -559,6 +559,9 @@ export default class NtrisGame {
 	        if (settings.game.rgr && this.playfield[row].filter(cell => cell.isGarbage()).length > 0) {
 	          // raise every row below this one
 	          this.raiserowsbelowrow(row);
+	          for (let i = 0; i < playfield[settings.game.boardHeight-1].length; i++) {
+	          	playfield[settings.game.boardHeight-1][i] = new gc.GridCell([gc.EMPTY, gc.GARBAGE][(Math.random() < sg.garbagePercentage / 100) * 1]);
+	          }
 	          this.increaseScore();
 
 	          playfield[settings.game.boardHeight - 1].map(cell => (Math.random() * 100 > settings.game.garbagePercentage ? new gc.GridCell() : new gc.GridCell(gc.GARBAGE)));
