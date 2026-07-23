@@ -444,6 +444,17 @@ export default class NtrisGame {
 	    }
 	  }
 
+	  // If we're rotating or flipping, we need an updated ghosty matrix
+	  let lgm = this.tetromino.ghostymatrix.map(r => r.slice()); 
+	  if(this.tetromino.ghosty) {
+	  	if(move == 'rotate') {
+	  		lgm = mu.rotate(lgm); 
+	  	}
+	  	if(move == 'flip') {
+	  		lgm = lgm.map(sdrvg => sdrvg.toReversed());
+	  	}
+	  }
+
 	  for (let row = 0; row < matrix.length; row++) {
 	    for (let col = 0; col < matrix[row].length; col++) {
 	      if (matrix[row][col]) {
@@ -456,7 +467,7 @@ export default class NtrisGame {
 	      	  // Only solid ghosty pieces actually collide
 	      	  
 	      	  if(this.tetromino.ghosty) {	      	  	
-	      	  	if(! (this.tetromino.ghostymatrix[row][col] == 'solid')) { 
+	      	  	if(! (lgm[row][col] == 'solid')) { 
 		      	  	if(! (hitFloor || hitWallLeft || hitWallRight) ) {
 		      	  		continue; 
 		      	  	}
@@ -466,7 +477,7 @@ export default class NtrisGame {
 	      	  if(hitWallLeft || hitWallRight) { if(this.tetromino.sticky) {this.placeTetromino();} return false; }
 	      	  if(hitFloor) { if(settings.game.floorIsLava) {this.showGameOver(); return false;} else {this.placeTetromino(); return false;} }
 	      	  if(this.isCollidable(gridCells[row][col])) {     
-	          	if(this.tetromino.sticky || this.movingDown) {this.placeTetromino();} return true;
+	          	if(this.tetromino.sticky || this.movingDown) {this.placeTetromino();} return false;
 	      	  }
 	        
 	      }

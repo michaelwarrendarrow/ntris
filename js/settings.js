@@ -222,12 +222,13 @@ export function randomizeSettings() {
   game["polyominoes"] = (Math.random() > 4/5);
   if (game["polyominoes"]) {
     game["mystery"] = Math.floor(-8*Math.log(Math.random()));
+    game.drunkAnt = false; 
   }
 
   game["morph"]    = (Math.random() > 9/10);
   game["drunkAnt"] = (Math.random() > 9/10);
 
-  if(game.drunkAnt) { game.morph = false; game.polyominoes = false; }
+  if(game.drunkAnt) { game.morph = false; }
 
   if(game.dual) { game.ghostyChance = 0; }
 
