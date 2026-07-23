@@ -217,7 +217,7 @@ export function randomizeSettings() {
 
   game["morph"]    = (Math.random() > 9/10);
   game["drunkAnt"] = (Math.random() > 9/10);
-  if(game["morph"] || game["drunkAnt"]) {
+  if((game["morph"] && !game["polyominoes"]) || game["drunkAnt"]) {
     game["mystery"] = 2; // These settings override piece selection
   }
 

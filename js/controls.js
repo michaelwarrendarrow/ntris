@@ -10,6 +10,7 @@ export function hideControls() {
 }
 
 // listen to keyboard events to move the active tetromino
+// we should probably add customizable keybinds but i'm not ready to do that
 document.addEventListener('keydown', function(e) {
   if (!game.controlsOff()) {
     // left

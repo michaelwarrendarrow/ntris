@@ -510,7 +510,7 @@ export default class NtrisGame {
 	}
 
 	droprowsaboverow(row) {
-	  for (let r = row; r >= 0; r--) {
+	  for (let r = row; r >= -1; r--) {
 	    for (let c = 0; c < this.playfield[r].length; c++) {
 	      this.playfield[r][c] = this.playfield[r-1][c];
 	    }
@@ -518,7 +518,7 @@ export default class NtrisGame {
 	}
 
 	raiserowsbelowrow(row) {
-	  for (let r = row; r < settings.game.boardHeight - 1; r++) {
+	  for (let r = row; r < settings.game.boardHeight; r++) {
 	    for (let c = 0; c < this.playfield[r].length; c++) {
 	      this.playfield[r][c] = this.playfield[r+1][c];
 	    }
