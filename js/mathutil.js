@@ -185,7 +185,7 @@ function standardOrientation(matrix) {
   let h = [matrix, rotate(matrix), rotate(rotate(matrix)), rotate(rotate(rotate(matrix)))];
   let J = h[0];
   for(let i = 0; i < 4; i++) {
-    if (isGreater(h[i], J)) {J = h[i];}
+    if (isGreater(J, h[i])) {J = h[i];}
   }
   return J;
 }
